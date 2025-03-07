@@ -1,1 +1,47 @@
+#include <iostream>
+#include <list>
+#include <unordered_map>
+
+using namespace std;
+
+class LRUCache {
+public:
+    LRUCache(int capacity) {
+        _capacity = capacity;
+    }
+
+    int get(int key) {
+        auto it = _cache.find(key);
+        if (it == _cache.end()) return -1;
+
+        // Move accessed key to the front (most recently used)
+        _lru.splice(_lru.begin(), _lru, it->second.second);
+        return it->second.first;
+    }
+
+    void put(int key, int value) {
+        auto it = _cache.find(key);
+
+        if (it != _cache.end()) {
+            // Key exists, update value and move to front
+            it->second.first = value;
+            _lru.splice(_lru.begin(), _lru, it->second.second);
+        } else {
+            if (_cache.size() == _capacity) {
+                // Evict LRU element
+                int lruKey = _lru.back();
+                _cache.erase(lruKey);
+                _lru.pop_back();
+            }
+            // Insert new key-value pair
+            _lru.push_front(key);
+            _cache[key] = {value, _lru.begin()};
+        }
+    }
+
+private:
+    int _capacity;
+    list<int> _lru;  // Store keys in usage order
+    unordered_map<int, pair<int, list<int>::iterator>> _cache;
+};
 

@@ -1,1 +1,78 @@
+#include <unordered_map>
+#include <list>
+#include <iostream>
+using namespace std;
+
+class LFUCache {
+public:
+    // 定義 Node 結構，儲存 key 的值、使用頻率及 list 迭代器
+    struct Node {
+        int value;               // Key 對應的 Value
+        int frequency;           // Key 的使用頻率
+        list<int>::iterator iter; // 指向 freq_list[freq] 中的迭代器 (方便 O(1) 刪除)
+    };
+
+    unordered_map<int, list<int>> freq_list; // 頻率 -> 儲存該頻率下所有的 keys
+    unordered_map<int, Node> cache;         // key -> {value, frequency, iterator}
+    int min_freq; // 記錄當前 cache 中的最小頻率
+    int cache_cap; // Cache 的容量
+
+    // 建構子，初始化容量
+    LFUCache(int capacity) {
+        cache_cap = capacity;
+        min_freq = 0; // 初始最小頻率為 0
+    }
+
+    // 更新 key 的頻率
+    void update_freq(int key) {
+        auto& node = cache[key]; // 取得 key 對應的 Node
+        int freq = node.frequency; // 取得目前的頻率
+
+        // **splice() 直接移動 key**
+        // 把 key 從 freq_list[freq] 移動到 freq_list[freq+1]
+        freq_list[freq + 1].splice(freq_list[freq + 1].begin(), freq_list[freq], node.iter);
+
+        // 更新 key 的頻率 & 迭代器
+        node.iter = freq_list[freq + 1].begin();
+        node.frequency++;
+
+        // 如果 freq_list[freq] 為空且 min_freq 剛好是 freq，則遞增 min_freq
+        if (freq_list[freq].empty() && min_freq == freq)
+            min_freq++;
+    }
+
+    // 取得 key 的值，並更新頻率
+    int get(int key) {
+        if (cache.count(key) == 0) // Key 不存在，回傳 -1
+            return -1;
+
+        update_freq(key); // 提升該 key 的使用頻率
+        return cache[key].value; // 回傳對應的值
+    }
+
+    // 插入或更新 key 的值
+    void put(int key, int value) {
+        if (cache_cap <= 0) // 如果容量為 0，不執行任何操作
+            return;
+
+        // 如果 key 已經存在，更新 value 並提升頻率
+        if (cache.count(key)) {
+            update_freq(key);
+            cache[key].value = value;
+            return;
+        }
+
+        // **如果 cache 滿了，刪除 min_freq 的最舊 key**
+        if (cache.size() == cache_cap) {
+            int keyToRemove = freq_list[min_freq].back(); // 取得 min_freq 中最久未使用的 key
+            freq_list[min_freq].pop_back(); // 移除該 key
+            cache.erase(keyToRemove); // 從 cache 中刪除該 key
+        }
+
+        // **插入新 key，頻率從 1 開始**
+        min_freq = 1; // 設定最小頻率為 1
+        freq_list[1].push_front(key); // 在 freq_list[1] 加入 key
+        cache[key] = {value, 1, freq_list[1].begin()}; // 插入到 cache，初始化頻率為 1
+    }
+};
 

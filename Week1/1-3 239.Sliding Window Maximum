@@ -1,1 +1,33 @@
 
+from collections import deque
+
+class Solution(object):
+    def maxSlidingWindow(self, nums, k):
+        """
+        :type nums: List[int]
+        :type k: int
+        :rtype: List[int]
+        """
+        if not nums:
+            return []
+        
+        dq = deque()  # 儲存數字的索引，維持單調遞減順序
+        result = []
+
+        for i, num in enumerate(nums):
+            # 移除不在窗口範圍內的元素
+            if dq and dq[0] < i - k + 1:
+                dq.popleft()
+
+            # 維持隊列的單調遞減性，移除所有比當前元素小的數
+            while dq and nums[dq[-1]] < num:
+                dq.pop()
+
+            # 將當前索引加入隊列
+            dq.append(i)
+
+            # 當窗口達到大小 k，才開始記錄結果
+            if i >= k - 1:
+                result.append(nums[dq[0]])  # dq[0] 是最大值的索引
+
+        return result

@@ -1,0 +1,20 @@
+class Solution {
+public:
+    int jump(vector<int>& nums) {
+        int jumps = 0; // 記錄跳躍次數
+        int current_jump_end = 0; // 當前跳躍的終點
+        int farthest = 0; // 能到達的最遠距離
+
+        for (int i = 0; i < nums.size() - 1; ++i) {
+            // 計算從當前索引 i 能到達的最遠距離
+            farthest = max(farthest, i + nums[i]);
+            
+            // 當前索引到達當前跳躍的終點時，必須進行新的跳躍
+            if (i == current_jump_end) {
+                ++jumps;
+                current_jump_end = farthest; // 更新跳躍終點
+            }
+        }
+        return jumps;
+    }
+};

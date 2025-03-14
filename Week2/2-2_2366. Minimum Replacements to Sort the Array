@@ -1,0 +1,24 @@
+#include <vector>
+using namespace std;
+
+class Solution {
+public:
+    long long minimumReplacement(vector<int>& nums) {
+        long long result = 0; // 記錄最少的拆分次數
+        int n = nums.size(); // 數組長度
+        int max_val = nums[n - 1]; // 初始化最大值，從最後一個元素開始
+
+        // 倒序遍歷數組，確保數組保持單調不遞減
+        for (int i = n - 2; i >= 0; --i) {
+            if (nums[i] > max_val) { // 如果當前元素大於下一個元素，則需要拆分
+                int k = (nums[i] + max_val - 1) / max_val; // 計算拆分為 k 份，每份不超過 max_val
+                result += k - 1; // 拆分為 k 份，則需要 k-1 次拆分操作
+                max_val = nums[i] / k; // 更新 max_val，使其不大於前一個元素
+            } else {
+                max_val = nums[i]; // 如果當前元素小於等於 max_val，則更新 max_val
+            }
+        }
+        
+        return result; // 返回最少的拆分次數
+    }
+};

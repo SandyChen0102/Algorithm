@@ -1,0 +1,39 @@
+#include <vector>
+#include <unordered_map>
+using namespace std;
+
+class Solution {
+public:
+    int minSwapsCouples(vector<int>& row) {
+        int n = row.size(); // 獲取座位數量（2n）
+        int swaps = 0; // 記錄交換次數
+        unordered_map<int, int> position; // 建立映射，記錄每個人的座位索引
+        
+        // 遍歷 row，記錄每個人的座位位置
+        for (int i = 0; i < n; ++i) {
+            position[row[i]] = i;
+        }
+        
+        // 每次處理一對座位
+        for (int i = 0; i < n; i += 2) {
+            int first_person = row[i]; // 當前座位的第一個人
+            int second_person = first_person ^ 1; // 計算應該與他配對的伴侶（偶數變奇數，奇數變偶數）
+            
+            // 如果當前座位的第二個人不是應該配對的伴侶
+            if (row[i + 1] != second_person) { 
+                int partner_index = position[second_person]; // 獲取伴侶目前的索引位置
+                
+                // 交換 row[i + 1]（錯誤的伴侶）和 row[partner_index]（正確的伴侶）
+                swap(row[i + 1], row[partner_index]);
+                
+                // 更新位置映射，確保映射仍然正確
+                position[row[partner_index]] = partner_index;
+                position[row[i + 1]] = i + 1;
+                
+                ++swaps; // 計算一次交換
+            }
+        }
+        
+        return swaps; // 返回最少的交換次數
+    }
+};

@@ -1,0 +1,43 @@
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+class Solution {
+public:
+    int intersectionSizeTwo(vector<vector<int>>& intervals) {
+        // 先按照區間的結束值排序，若結束值相同則按照開始值降序排序
+        sort(intervals.begin(), intervals.end(), [](const vector<int>& a, const vector<int>& b) {
+            return a[1] == b[1] ? a[0] > b[0] : a[1] < b[1];
+        });
+        
+        int n = intervals.size(); // 獲取區間的數量
+        int count = 0; // 記錄最小包含集的大小
+        int largest = -1, second_largest = -1; // 記錄當前區間選擇的兩個數
+        
+        for (const auto& interval : intervals) { // 遍歷所有區間
+            int start = interval[0], end = interval[1]; // 獲取當前區間的起點和終點
+            
+            // 檢查目前的 largest 和 second_largest 是否能覆蓋當前區間
+            bool largestIn = (start <= largest); // 是否 largest 在當前區間內
+            bool secondLargestIn = (start <= second_largest); // 是否 second_largest 在當前區間內
+            
+            if (largestIn && secondLargestIn) {
+                continue; // 如果這兩個數都能覆蓋區間，則不需要添加新數字
+            }
+            
+            // 需要添加新數字
+            if (largestIn) {
+                second_largest = largest; // 保留 largest 作為 second_largest
+                largest = end; // 在當前區間內選擇一個新數字（區間的終點）
+                count++; // 只需新增一個數字
+            } else {
+                // 如果兩個選擇的數字都不在當前區間內，則需要新增兩個數字
+                largest = end; // 添加區間終點
+                second_largest = end - 1; // 添加終點的前一個數字，以確保覆蓋
+                count += 2; // 需要新增兩個數字
+            }
+        }
+        
+        return count; // 返回最小包含集的大小
+    }
+};

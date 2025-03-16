@@ -1,0 +1,28 @@
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+class Solution {
+public:
+    int numRescueBoats(vector<int>& people, int limit) {
+        // 先將人的體重排序，以便使用雙指針法
+        sort(people.begin(), people.end());
+        
+        int left = 0; // 最輕的人索引
+        int right = people.size() - 1; // 最重的人索引
+        int boats = 0; // 計算所需船的數量
+        
+        while (left <= right) {
+            // 每艘船可以最多載兩個人
+            if (people[left] + people[right] <= limit) {
+                ++left; // 最輕的人與最重的人同船
+            }
+            // 無論是否能同船，最重的人一定要上船
+            --right;
+            
+            ++boats; // 計算使用的船數
+        }
+        
+        return boats; // 返回最少所需的船數
+    }
+};

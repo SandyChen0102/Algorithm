@@ -1,1 +1,36 @@
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+class Solution {
+public:
+    int candy(vector<int>& ratings) {
+        int n = ratings.size(); // 獲取孩子的數量
+        if (n == 0) return 0; // 若沒有孩子，直接返回 0
+        
+        vector<int> candies(n, 1); // 每個孩子至少有 1 顆糖果，初始化糖果數組
+        
+        // 從左到右遍歷，確保右側孩子若評分較高則糖果數量也較多
+        for (int i = 1; i < n; ++i) {
+            if (ratings[i] > ratings[i - 1]) {
+                candies[i] = candies[i - 1] + 1; // 右側評分較高，糖果加 1
+            }
+        }
+        
+        // 從右到左遍歷，確保左側孩子若評分較高則糖果數量也較多
+        for (int i = n - 2; i >= 0; --i) {
+            if (ratings[i] > ratings[i + 1]) {
+                candies[i] = max(candies[i], candies[i + 1] + 1); // 確保糖果數量符合規則
+            }
+        }
+        
+        // 計算總糖果數量
+        int total_candies = 0;
+        for (int c : candies) {
+            total_candies += c; // 累加每個孩子的糖果數量
+        }
+        
+        return total_candies; // 返回最少需要的糖果數量
+    }
+};
 

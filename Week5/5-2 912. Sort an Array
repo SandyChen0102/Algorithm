@@ -1,0 +1,69 @@
+class Solution {
+public:
+    // 主函式：排序整個陣列
+    vector<int> sortArray(vector<int>& nums) {
+        int n = nums.size();
+        // 當資料量很小時，使用插入排序速度更快
+        if (n < 16) {
+            insertionSort(nums, 0, n - 1);
+            return nums;
+        }
+        // 建立最大堆，從最後一個非葉節點開始調整
+        for (int i = n / 2 - 1; i >= 0; i--) {
+            siftDown(nums, n, i);
+        }
+        // 重複地將堆頂最大值移到陣列尾端，再重新調整堆
+        for (int i = n - 1; i > 0; i--) {
+            // 將堆頂元素與最後一個元素交換
+            swap(nums[0], nums[i]);
+            // 若剩下的堆大小小於十六，就直接使用插入排序處理剩下的部分
+            if (i < 16) {
+                insertionSort(nums, 0, i - 1);
+                break;
+            }
+            // 繼續對新的堆頂進行下沉操作
+            siftDown(nums, i, 0);
+        }
+        return nums;
+    }
+
+private:
+    // siftDown 函式：調整以索引 i 為根的最大堆
+    // 使用一個暫存變數 temp 以減少不必要的交換次數
+    void siftDown(vector<int>& nums, int heapSize, int i) {
+        int temp = nums[i]; // 儲存目前的值
+        int child;
+
+        // 當有左子節點時持續執行
+        while ((child = 2 * i + 1) < heapSize) {
+            // 如果右子節點存在且比左子節點大，就使用右子節點
+            if (child + 1 < heapSize && nums[child + 1] > nums[child]) {
+                child = child + 1;
+            }
+            // 若子節點小於等於 temp，表示已經是最大堆
+            if (nums[child] <= temp) {
+                break;
+            }
+            // 將子節點值往上移動
+            nums[i] = nums[child];
+            i = child; // 繼續向下走
+        }
+        // 將原本的值放入正確位置
+        nums[i] = temp;
+    }
+
+    // 插入排序函式，適用於小區間資料排序
+    void insertionSort(vector<int>& nums, int left, int right) {
+        for (int i = left + 1; i <= right; i++) {
+            int key = nums[i];
+            int j = i - 1;
+            // 將比 key 大的元素往右移動
+            while (j >= left && nums[j] > key) {
+                nums[j + 1] = nums[j];
+                j = j - 1;
+            }
+            // 插入 key 到正確位置
+            nums[j + 1] = key;
+        }
+    }
+};

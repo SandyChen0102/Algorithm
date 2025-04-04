@@ -1,0 +1,28 @@
+class Solution {
+public:
+    ListNode* swapPairs(ListNode* head) {
+        // 建立一個虛擬節點 d，指向 head，可統一處理頭節點交換的情況
+        ListNode* d = new ListNode(0);
+        d->next = head;
+
+        ListNode* prev = d; // 前一個節點，初始為 d
+
+        // 每次檢查是否有兩個節點可交換
+        while (prev->next && prev->next->next) {
+            // 取出要交換的兩個節點
+            ListNode* first = prev->next;
+            ListNode* second = prev->next->next;
+
+            // 執行交換操作
+            first->next = second->next; // 第1個指向第3個
+            second->next = first;       // 第2個指向第1個
+            prev->next = second;        // 前一個節點指向第2個
+
+            // prev 移動兩格，準備交換下一對
+            prev = first;
+        }
+
+        // 回傳新的頭節點
+        return d->next;
+    }
+};

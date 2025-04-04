@@ -1,0 +1,43 @@
+class Solution {
+public:
+    ListNode* reverseKGroup(ListNode* head, int k) {
+        // 建立 d 節點處理頭部交換情況
+        ListNode* d = new ListNode(0);
+        d->next = head;
+
+        ListNode* prev = d;  // 上一組的尾巴
+        ListNode* curr = head;
+
+        while (true) {
+            // 檢查剩下是否有足夠的 k 個節點
+            ListNode* check = curr;
+            for (int i = 0; i < k; ++i) {
+                if (!check) return d->next;  // 不足 k 個，直接返回
+                check = check->next;
+            }
+
+            // 現在 curr 是這組的第一個節點，check 是下一組的起點
+            // 我們要把 curr ~ check-1 這段反轉
+
+            ListNode* prevNode = check;  // 翻轉時的前一個節點（最初設為下一組的開頭）
+            ListNode* node = curr;
+
+            // 翻轉這 k 個節點
+            for (int i = 0; i < k; ++i) {
+                ListNode* nextNode = node->next;
+                node->next = prevNode;
+                prevNode = node;
+                node = nextNode;
+            }
+
+            // prev 是上一組尾巴，接上這組翻轉後的頭（prevNode）
+            prev->next = prevNode;
+
+            // curr 現在變成這組的尾巴（因為被翻到最後），下一輪從這裡開始
+            prev = curr;
+            curr = check;
+        }
+
+        return d->next;
+    }
+};

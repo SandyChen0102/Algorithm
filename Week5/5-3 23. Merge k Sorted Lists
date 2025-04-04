@@ -1,0 +1,47 @@
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode() : val(0), next(nullptr) {}
+ *     ListNode(int x) : val(x), next(nullptr) {}
+ *     ListNode(int x, ListNode *next) : val(x), next(next) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+        // 使用比較函式的 lambda 表達式：小的排在上面
+        auto cmp = [](ListNode* a, ListNode* b) {
+            return a->val > b->val;  // 最小堆
+        };
+
+        // 建立最小堆（priority_queue 預設是最大堆，要用 greater 做最小堆）
+        priority_queue<ListNode*, vector<ListNode*>, decltype(cmp)> pq(cmp);
+
+        // 將所有串列的第一個節點加入最小堆
+        for (auto node : lists) {
+            if (node) pq.push(node);
+        }
+
+        // 建立 d node 作為結果鏈結串列開頭
+        ListNode* d = new ListNode(0);
+        ListNode* tail = d;
+
+        // 持續從堆中取出最小值節點，接到結果串列後面
+        while (!pq.empty()) {
+            ListNode* curr = pq.top();
+            pq.pop();
+
+            tail->next = curr;
+            tail = tail->next;
+
+            // 如果 curr 有下一個節點，繼續放入堆中
+            if (curr->next) {
+                pq.push(curr->next);
+            }
+        }
+
+        return d->next;
+    }
+};

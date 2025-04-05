@@ -1,0 +1,60 @@
+class Solution {
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        vector<vector<string>> result;   // 儲存所有合法的皇后擺法
+        // 建立初始棋盤：n 行 n 列，全部為 '.'
+        vector<string> board(n, string(n, '.'));
+
+        // 用來記錄哪些欄（columns）已經被擺上皇后
+        vector<bool> columns(n, false);
+
+        // 主對角線（左上到右下） row - col 固定，為了防止負數，整體加上 (n - 1)
+        vector<bool> first(2 * n - 1, false);
+
+        // 副對角線（右上到左下） row + col 固定
+        vector<bool> second(2 * n - 1, false);
+
+        // 從第 0 列開始回溯
+        backtrack(0, n, board, columns, first, second, result);
+        return result;
+    }
+
+private:
+    // 回溯函式：每次嘗試在某一列放置皇后
+    void backtrack(int row, int n,
+                   vector<string>& board,
+                   vector<bool>& columns,
+                   vector<bool>& first,
+                   vector<bool>& second,
+                   vector<vector<string>>& result) {
+        // 終止條件：如果已成功放滿 n 列，表示找到一組解法
+        if (row == n) {
+            result.push_back(board); // 加入結果集合
+            return;
+        }
+
+        // 嘗試在當前列的每一欄放置皇后
+        for (int c = 0; c < n; c++) {
+            // 如果當前欄或對角線已經有皇后，就不能放
+            if (columns[c] || first[row - c + n - 1] || second[row + c])
+                continue;
+
+            // 在棋盤的 (row, c) 位置放置皇后
+            board[row][c] = 'Q';
+            // 標記這個欄與對角線已被使用
+            columns[c] = true;
+            first[row - c + n - 1] = true;
+            second[row + c] = true;
+
+            // 遞迴處理下一列
+            backtrack(row + 1, n, board, columns, first, second, result);
+
+            // 回溯：撤銷這次放置
+            board[row][c] = '.'; // 移除皇后
+            columns[c] = false;
+            first[row - c + n - 1] = false;
+            second[row + c] = false;
+        }
+    }
+};
+

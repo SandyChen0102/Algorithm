@@ -1,0 +1,55 @@
+class Solution {
+public:
+    vector<string> wordBreak(string s, vector<string>& wordDict) {
+        // 將字典轉為 unordered_set，加快查詢速度
+        unordered_set<string> dict(wordDict.begin(), wordDict.end());
+
+        // 使用 unordered_map 做記憶化，避免重複計算子問題
+        unordered_map<string, vector<string>> memo;
+
+        // 啟動 DFS 搜尋所有可能的切割組合
+        return dfs(s, dict, memo);
+    }
+
+private:
+    // 遞迴函式：對字串 s 找出所有合法的分割組合
+    vector<string> dfs(string s, unordered_set<string>& dict, unordered_map<string, vector<string>>& memo) {
+        // 如果這段 s 已經處理過，直接回傳記憶化結果
+        if (memo.count(s)) return memo[s];
+
+        vector<string> result;
+
+        // 終止條件：如果 s 是空字串，代表已經成功切割完畢
+        if (s.empty()) {
+            result.push_back(""); // 回傳一個空字串作為結尾基底
+            return result;
+        }
+
+        // 嘗試從字串 s 的開頭切出長度為 1~n 的前綴字
+        for (int len = 1; len <= s.size(); ++len) {
+            string word = s.substr(0, len); // 取出目前嘗試的前綴字
+
+            // 如果該前綴在字典中
+            if (dict.count(word)) {
+                // 對剩下的字串繼續遞迴處理
+                vector<string> sublist = dfs(s.substr(len), dict, memo);
+
+                // 把當前的單字與後續的子結果組合起來
+                for (const string& sub : sublist) {
+                    // 如果 sub 是空的，就不加空格
+                    if (sub.empty()) {
+                        result.push_back(word);
+                    } else {
+                        result.push_back(word + " " + sub);
+                    }
+                }
+            }
+        }
+
+        // 將結果記錄到記憶表中，避免下次重複計算
+        memo[s] = result;
+
+        return result;
+    }
+};
+

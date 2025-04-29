@@ -1,0 +1,32 @@
+class Solution {
+public:
+    int paintWalls(vector<int>& cost, vector<int>& time) {
+        int n = cost.size();
+
+        // dp[i] 表示剩下 i 面牆還沒處理時，最小總花費
+        // 初始化為極大值，代表不可達
+        vector<int> dp(n + 1, 1e9);
+        dp[0] = 0;  // base case：所有牆都已處理完，不需花費
+
+        // 遍歷每一面牆（每個選項）
+        for (int i = 0; i < n; ++i) {
+            // 倒序更新 dp 陣列，確保每面牆只選擇一次（0/1 knapsack 特性）
+            for (int j = n; j >= 0; --j) {
+                // 若現在要讓這面牆由付費工人處理
+
+                // 免費工人最多可以在這段時間內畫 time[i] 面牆（每單位時間畫 1 面）
+                // 我們需要先處理掉 j - 1 - time[i] 面牆，剩下 j 面牆的狀態才能達成
+                // 如果 j - 1 - time[i] < 0，就設為 0（不能有負的免費牆）
+                int freeLeft = max(0, j - 1 - time[i]);
+
+                // 狀態轉移：
+                // 不選這面牆：保留 dp[j] 原本值
+                // 選這面牆：從 dp[freeLeft] 轉移過來，並加上這面牆的成本
+                dp[j] = min(dp[j], dp[freeLeft] + cost[i]);
+            }
+        }
+
+        // 最終答案：剩下 n 面牆處理完所需的最小總花費
+        return dp[n];
+    }
+};

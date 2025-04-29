@@ -1,0 +1,62 @@
+class Solution {
+public:
+    int openLock(vector<string>& deadends, string target) {
+        // 將 deadends 放進 unordered_set，加速查詢
+        unordered_set<string> dead(deadends.begin(), deadends.end());
+
+        // 特殊情況：如果 "0000" 是死鎖，無法啟動，直接回傳 -1
+        if (dead.count("0000")) return -1;
+        // 特殊情況：如果起點就是目標，步數為 0
+        if (target == "0000") return 0;
+
+        // 使用兩個集合進行雙向 BFS：從起點和目標同時擴展
+        unordered_set<string> beginSet = {"0000"};
+        unordered_set<string> endSet = {target};
+        unordered_set<string> visited; // 記錄已經訪問過的狀態，避免重複搜索
+
+        int steps = 0; // 記錄當前轉動次數（層數）
+
+        while (!beginSet.empty() && !endSet.empty()) {
+            // 為了減少擴展節點數，每次擴展較小的集合
+            if (beginSet.size() > endSet.size()) {
+                swap(beginSet, endSet);
+            }
+
+            unordered_set<string> temp; // 暫存下一層所有擴展出來的節點
+
+            // 遍歷目前層的所有節點
+            for (const string& curr : beginSet) {
+                // 如果當前節點是死鎖，跳過
+                if (dead.count(curr)) continue;
+
+                // 嘗試對每個輪子進行旋轉
+                for (int i = 0; i < 4; ++i) {
+                    // 兩種旋轉方向：往上加一、往下減一
+                    for (int d = -1; d <= 1; d += 2) {
+                        string next = curr;
+                        // 旋轉第 i 個輪子，處理數字環繞（0 和 9 相連）
+                        next[i] = (next[i] - '0' + d + 10) % 10 + '0';
+
+                        // 如果 next 在另一邊的集合中，表示兩邊相遇，找到答案
+                        if (endSet.count(next)) {
+                            return steps + 1;
+                        }
+
+                        // 如果 next 還沒訪問過，且不是死鎖，加入下一層
+                        if (!visited.count(next) && !dead.count(next)) {
+                            temp.insert(next);
+                            visited.insert(next);
+                        }
+                    }
+                }
+            }
+
+            // 更新 beginSet 為擴展出來的節點，進入下一層
+            beginSet = temp;
+            steps++;
+        }
+
+        // 如果遍歷完都沒相遇，代表無法解鎖
+        return -1;
+    }
+};

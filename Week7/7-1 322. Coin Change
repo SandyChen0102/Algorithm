@@ -1,0 +1,21 @@
+class Solution {
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        // 建立 dp 陣列，大小為 amount + 1，初始值為 amount + 1（代表無限大）
+        vector<int> dp(amount + 1, amount + 1);
+        dp[0] = 0; // 湊出 0 元需要 0 枚硬幣
+
+        // 從小到大逐步計算每個金額的最小硬幣數
+        for (int i = 1; i <= amount; ++i) {
+            for (int coin : coins) {
+                if (i - coin >= 0) {
+                    dp[i] = min(dp[i], dp[i - coin] + 1);
+                }
+            }
+        }
+
+        // 如果最後仍是無限大，代表無法湊出，否則回傳最少硬幣數量
+        return dp[amount] == amount + 1 ? -1 : dp[amount];
+    }
+};
+

@@ -1,0 +1,32 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        // 遞迴終止條件：空節點或遇到 p 或 q
+        if (!root || root == p || root == q) {
+            return root;
+        }
+
+        // 遞迴搜尋左子樹
+        TreeNode* left = lowestCommonAncestor(root->left, p, q);
+        // 遞迴搜尋右子樹
+        TreeNode* right = lowestCommonAncestor(root->right, p, q);
+
+        // 如果左右子樹都找到了，當前節點是最近公共祖先
+        if (left && right) {
+            return root;
+        }
+
+        // 只有一邊找到，回傳那一邊
+        return left ? left : right;
+    }
+};
+

@@ -19,8 +19,6 @@ public:
         TreeNode* left = lowestCommonAncestor(root->left, p, q);
         // 遞迴搜尋右子樹
         TreeNode* right = lowestCommonAncestor(root->right, p, q);
-
-        // 如果左右子樹都找到了，當前節點是最近公共祖先
         if (left && right) {
             return root;
         }

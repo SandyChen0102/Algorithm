@@ -10,7 +10,6 @@ public:
                 stop_to_buses[stop].push_back(bus);
             }
         }
-
         queue<int> q; // BFS：目前能到達的站點
         unordered_set<int> visited_stops; // 記錄已經到過的站點
         unordered_set<int> visited_buses; // 記錄已經搭過的公車

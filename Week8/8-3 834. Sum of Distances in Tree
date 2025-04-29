@@ -1,0 +1,43 @@
+class Solution {
+public:
+    vector<int> res;    // 儲存每個節點的答案
+    vector<int> count;  // 每個節點子樹內節點總數
+    vector<vector<int>> graph; // 樹的鄰接表
+
+    vector<int> sumOfDistancesInTree(int n, vector<vector<int>>& edges) {
+        res.resize(n, 0);
+        count.resize(n, 1); // 初始化：每個節點自己也算一個
+        graph.resize(n);
+
+        // 建立無向圖
+        for (auto& e : edges) {
+            graph[e[0]].push_back(e[1]);
+            graph[e[1]].push_back(e[0]);
+        }
+
+        dfs1(0, -1); // 第一次遍歷，從節點0開始，父節點設為-1
+        dfs2(0, -1); // 第二次遍歷，從節點0開始，父節點設為-1
+
+        return res;
+    }
+
+    // 第一次DFS：自底向上，計算每個節點的子樹節點數和子樹距離和
+    void dfs1(int node, int parent) {
+        for (int child : graph[node]) {
+            if (child == parent) continue; // 避免回到父節點
+            dfs1(child, node);
+            count[node] += count[child];
+            res[node] += res[child] + count[child];
+        }
+    }
+
+    // 第二次DFS：自頂向下，根據父節點推導子節點的結果
+    void dfs2(int node, int parent) {
+        for (int child : graph[node]) {
+            if (child == parent) continue;
+            // 從父節點推出子節點的 res
+            res[child] = res[node] - count[child] + (count.size() - count[child]);
+            dfs2(child, node);
+        }
+    }
+};

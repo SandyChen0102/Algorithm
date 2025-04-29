@@ -1,0 +1,28 @@
+class Solution {
+public:
+    int eraseOverlapIntervals(vector<vector<int>>& intervals) {
+        if (intervals.empty()) return 0;
+
+        // 按照區間結束時間排序
+        sort(intervals.begin(), intervals.end(), [](vector<int>& a, vector<int>& b) {
+            return a[1] < b[1];
+        });
+
+        int count = 0; // 要刪除的區間數
+        int prev_end = intervals[0][1]; // 目前最後保留區間的結束時間
+
+        // 從第二個區間開始遍歷
+        for (int i = 1; i < intervals.size(); i++) {
+            if (intervals[i][0] < prev_end) {
+                // 有重疊，需要刪除一個（刪掉當前這個）
+                count++;
+            } else {
+                // 沒重疊，更新最新保留的結束時間
+                prev_end = intervals[i][1];
+            }
+        }
+
+        return count;
+    }
+};
+

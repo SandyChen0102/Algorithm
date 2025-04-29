@@ -1,0 +1,53 @@
+class Solution {
+public:
+    int numBusesToDestination(vector<vector<int>>& routes, int source, int target) {
+        if (source == target) return 0; // 起點就是終點
+
+        // 建立站點到車輛的映射：某個站可以搭哪些車
+        unordered_map<int, vector<int>> stop_to_buses;
+        for (int bus = 0; bus < routes.size(); ++bus) {
+            for (int stop : routes[bus]) {
+                stop_to_buses[stop].push_back(bus);
+            }
+        }
+
+        queue<int> q; // BFS：目前能到達的站點
+        unordered_set<int> visited_stops; // 記錄已經到過的站點
+        unordered_set<int> visited_buses; // 記錄已經搭過的公車
+
+        q.push(source);
+        visited_stops.insert(source);
+
+        int buses_taken = 0; // 搭的公車數量（BFS層數）
+
+        while (!q.empty()) {
+            int sz = q.size();
+            buses_taken++; // 每進入新層，表示多搭一次公車
+
+            for (int i = 0; i < sz; ++i) {
+                int stop = q.front();
+                q.pop();
+
+                // 看有哪些公車路線經過這個站點
+                for (int bus : stop_to_buses[stop]) {
+                    if (visited_buses.count(bus)) continue; // 如果這台公車搭過了，跳過
+                    visited_buses.insert(bus); // 標記這台公車已搭過
+
+                    // 這台公車所有站都可以到
+                    for (int next_stop : routes[bus]) {
+                        if (next_stop == target) {
+                            return buses_taken; // 如果能到目標站，回傳搭乘次數
+                        }
+                        if (!visited_stops.count(next_stop)) {
+                            q.push(next_stop);
+                            visited_stops.insert(next_stop);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 如果遍歷完都沒到目標站，回傳 -1
+        return -1;
+    }
+};

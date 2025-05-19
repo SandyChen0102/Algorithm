@@ -1,0 +1,29 @@
+class Solution {
+public:
+    int maxCoins(vector<int>& nums) {
+        int n = nums.size();
+
+        // 擴展原陣列，加上兩側 1，方便處理邊界
+        vector<int> points(n + 2, 1);
+        for (int i = 0; i < n; ++i) {
+            points[i + 1] = nums[i];
+        }
+
+        // dp[i][j] 表示 (i, j) 之間的最大金幣
+        vector<vector<int>> dp(n + 2, vector<int>(n + 2, 0));
+
+        // 區間長度從 2 開始（最小區間為 (i, i+1)，不含任何可戳氣球）
+        for (int len = 2; len <= n + 1; ++len) {
+            for (int left = 0; left + len <= n + 1; ++left) {
+                int right = left + len;
+                // 嘗試所有可能的「最後一個戳破的氣球」k
+                for (int k = left + 1; k < right; ++k) {
+                    dp[left][right] = max(dp[left][right],
+                        dp[left][k] + dp[k][right] + points[left] * points[k] * points[right]);
+                }
+            }
+        }
+
+        return dp[0][n + 1];
+    }
+};

@@ -1,0 +1,17 @@
+class Solution {
+public:
+    int superEggDrop(int k, int n) {
+        // dp[i] 表示：k 顆蛋、i 次操作，最多可以測幾層
+        vector<vector<int>> dp(k + 1, vector<int>(n + 1, 0));
+
+        int m = 0;
+        while (dp[k][m] < n) {
+            ++m;
+            for (int eggs = 1; eggs <= k; ++eggs) {
+                dp[eggs][m] = dp[eggs][m - 1] + dp[eggs - 1][m - 1] + 1;
+            }
+        }
+
+        return m;
+    }
+};

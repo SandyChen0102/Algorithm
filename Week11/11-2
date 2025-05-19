@@ -1,1 +1,45 @@
 
+class ExamRoom {
+private:
+    int N;                // 座位總數
+    set<int> seats;       // 記錄當前已有人坐的座位（自動排序）
+
+public:
+    ExamRoom(int n) : N(n) {}
+
+    int seat() {
+        // 情況一：教室空，直接坐在 0
+        if (seats.empty()) {
+            seats.insert(0);
+            return 0;
+        }
+
+        int maxDist = *seats.begin(); // 起始點到第一位同學的距離
+        int seatToTake = 0;
+
+        int prev = -1;
+        for (int s : seats) {
+            if (prev != -1) {
+                // 找到兩位同學之間的最大間距，取中點
+                int d = (s - prev) / 2;
+                if (d > maxDist) {
+                    maxDist = d;
+                    seatToTake = prev + d;
+                }
+            }
+            prev = s;
+        }
+
+        // 檢查尾端距離是否更遠
+        if (N - 1 - *seats.rbegin() > maxDist) {
+            seatToTake = N - 1;
+        }
+
+        seats.insert(seatToTake);
+        return seatToTake;
+    }
+
+    void leave(int p) {
+        seats.erase(p);  // 將該座位標記為空
+    }
+};

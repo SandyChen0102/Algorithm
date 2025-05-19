@@ -1,0 +1,27 @@
+class Solution {
+public:
+    int minEatingSpeed(vector<int>& piles, int h) {
+        int left = 1; // 最低吃速，不能是 0
+        int right = *max_element(piles.begin(), piles.end()); // 最快也不會超過最大堆的香蕉數
+
+        while (left < right) {
+            int mid = (left + right) / 2;
+            if (canFinish(piles, h, mid)) {
+                right = mid; // 嘗試更慢
+            } else {
+                left = mid + 1; // 吃不完，速度要變快
+            }
+        }
+
+        return left; // 最小可行速度
+    }
+
+    // 判斷吃速 k 是否足夠
+    bool canFinish(const vector<int>& piles, int h, int k) {
+        int hours = 0;
+        for (int p : piles) {
+            hours += (p + k - 1) / k; // 等價於 ceil(p / k)
+        }
+        return hours <= h;
+    }
+};

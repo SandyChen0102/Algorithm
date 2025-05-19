@@ -1,1 +1,40 @@
 
+class Solution {
+public:
+    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
+        // 建立鄰接表與入度表
+        vector<vector<int>> graph(numCourses);
+        vector<int> indegree(numCourses, 0);
+
+        // 填入圖資料與入度統計
+        for (auto& p : prerequisites) {
+            int a = p[0], b = p[1];
+            graph[b].push_back(a);  // b → a
+            indegree[a]++;
+        }
+
+        // 建立 queue，將所有入度為 0 的課程加入（可以先修）
+        queue<int> q;
+        for (int i = 0; i < numCourses; ++i) {
+            if (indegree[i] == 0)
+                q.push(i);
+        }
+
+        vector<int> order;
+
+        // BFS 過程
+        while (!q.empty()) {
+            int cur = q.front(); q.pop();
+            order.push_back(cur);
+
+            for (int nei : graph[cur]) {
+                indegree[nei]--;
+                if (indegree[nei] == 0)
+                    q.push(nei);
+            }
+        }
+
+        // 如果結果長度不等於課程數，代表有環，無法完成
+        return order.size() == numCourses ? order : vector<int>{};
+    }
+};

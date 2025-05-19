@@ -1,0 +1,40 @@
+class Solution {
+public:
+    int shortestPathLength(vector<vector<int>>& graph) {
+        int n = graph.size();
+        if (n == 1) return 0;
+
+        // visited[node][mask] 表示是否已訪問狀態 (node, mask)
+        vector<vector<bool>> visited(n, vector<bool>(1 << n, false));
+        queue<tuple<int, int, int>> q; // (node, mask, steps)
+
+        // 所有節點都作為起點加入 queue
+        for (int i = 0; i < n; ++i) {
+            int mask = (1 << i);
+            q.emplace(i, mask, 0);
+            visited[i][mask] = true;
+        }
+
+        // 所有節點都訪問過的目標 mask
+        int final_mask = (1 << n) - 1;
+
+        while (!q.empty()) {
+            auto [node, mask, steps] = q.front();
+            q.pop();
+
+            // 如果當前 mask 表示已經走訪過所有節點
+            if (mask == final_mask)
+                return steps;
+
+            for (int nei : graph[node]) {
+                int next_mask = mask | (1 << nei);
+                if (!visited[nei][next_mask]) {
+                    visited[nei][next_mask] = true;
+                    q.emplace(nei, next_mask, steps + 1);
+                }
+            }
+        }
+
+        return -1; // 不可能走不到（因為圖是連通的）
+    }
+};

@@ -1,0 +1,50 @@
+class Solution {
+public:
+    vector<int> findRedundantDirectedConnection(vector<vector<int>>& edges) {
+        int n = edges.size();
+        vector<int> parent(n + 1);
+        iota(parent.begin(), parent.end(), 0); // 初始化每個節點的父為自己
+
+        vector<int> cand1, cand2;  // 可能的兩條邊（同一個節點有兩個父）
+
+        // 先找出是否有節點有兩個父
+        vector<int> node_parent(n + 1, 0);
+        for (auto& edge : edges) {
+            int u = edge[0], v = edge[1];
+            if (node_parent[v] == 0) {
+                node_parent[v] = u;
+            } else {
+                // 發現 v 有兩個父節點：一個是 node_parent[v]，一個是 u
+                cand1 = {node_parent[v], v}; // 第一條（較早出現）
+                cand2 = edge;                // 第二條（較晚出現）
+                edge[1] = 0; // 暫時刪除 cand2
+            }
+        }
+
+        // 初始化 Union-Find
+        for (int i = 0; i <= n; ++i)
+            parent[i] = i;
+
+        // Union-Find 過程，檢查是否形成環
+        for (auto& edge : edges) {
+            int u = edge[0], v = edge[1];
+            if (v == 0) continue; // cand2 暫時跳過
+
+            int pu = find(parent, u);
+            if (pu == v) {
+                // 有環
+                return cand1.empty() ? edge : cand1;
+            }
+            parent[v] = pu;
+        }
+
+        // 沒有形成環 → 要刪的是第二條指向該節點的邊
+        return cand2;
+    }
+
+    int find(vector<int>& parent, int x) {
+        if (parent[x] != x)
+            parent[x] = find(parent, parent[x]);
+        return parent[x];
+    }
+};

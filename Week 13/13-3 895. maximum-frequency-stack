@@ -1,0 +1,29 @@
+class FreqStack {
+private:
+    unordered_map<int, int> freq;
+    unordered_map<int, stack<int>> group;
+    int maxFreq = 0;
+
+public:
+    FreqStack() {}
+
+    void push(int val) {
+        int f = ++freq[val];        // 更新頻率
+        group[f].push(val);         // 加到對應頻率的 stack
+        maxFreq = max(maxFreq, f);  // 更新最大頻率
+    }
+
+    int pop() {
+        int val = group[maxFreq].top();
+        group[maxFreq].pop();
+        freq[val]--;
+
+        // 若目前最大頻率的 stack 清空了，往下降
+        if (group[maxFreq].empty()) {
+            maxFreq--;
+        }
+
+        return val;
+    }
+};
+

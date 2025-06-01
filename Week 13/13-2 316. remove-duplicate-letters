@@ -1,0 +1,28 @@
+class Solution {
+public:
+    string removeDuplicateLetters(string s) {
+        vector<int> count(26, 0);   // 每個字母的剩餘數量
+        vector<bool> inStack(26, false); // 是否已經在 stack 中
+
+        for (char c : s) {
+            count[c - 'a']++;
+        }
+
+        string stack; // 當作結果的 stack
+        for (char c : s) {
+            count[c - 'a']--;
+
+            if (inStack[c - 'a']) continue;
+
+            while (!stack.empty() && c < stack.back() && count[stack.back() - 'a'] > 0) {
+                inStack[stack.back() - 'a'] = false;
+                stack.pop_back();
+            }
+
+            stack.push_back(c);
+            inStack[c - 'a'] = true;
+        }
+
+        return stack;
+    }
+};

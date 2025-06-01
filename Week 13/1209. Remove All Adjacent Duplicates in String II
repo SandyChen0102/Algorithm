@@ -1,0 +1,25 @@
+class Solution {
+public:
+    string removeDuplicates(string s, int k) {
+        vector<pair<char, int>> stk;
+        stk.reserve(s.size());
+
+        for (char c : s) {
+            if (!stk.empty() && stk.back().first == c) {
+                stk.back().second += 1;
+                if (stk.back().second == k) {
+                    stk.pop_back();  // 移除 k 個重複字元
+                }
+            } else {
+                stk.emplace_back(c, 1);
+            }
+        }
+
+        string result;
+        result.reserve(s.size());
+        for (const auto& [ch, count] : stk) {
+            result.append(count, ch);
+        }
+        return result;
+    }
+};

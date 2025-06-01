@@ -1,0 +1,52 @@
+class Solution {
+public:
+    int maxTaskAssign(vector<int>& tasks, vector<int>& workers, int pills, int strength) {
+        sort(tasks.begin(), tasks.end());       // 任務依需求排序
+        sort(workers.begin(), workers.end());   // 工人依能力排序
+
+        int low = 0, high = min(tasks.size(), workers.size());
+
+        // 二分搜尋最大能完成的任務數
+        while (low < high) {
+            int mid = (low + high + 1) / 2;
+            if (canAssign(tasks, workers, pills, strength, mid)) {
+                low = mid;  // mid 成功，往右找更多任務
+            } else {
+                high = mid - 1;  // mid 失敗，往左縮小任務數
+            }
+        }
+
+        return low;
+    }
+
+private:
+    bool canAssign(const vector<int>& tasks, const vector<int>& workers,
+                   int pills, int strength, int taskCount) {
+        deque<int> boosted;   // 儲存可以用藥丸補強後能完成任務的工人
+        int w = workers.size() - 1;
+        int freePills = pills;
+
+        // 任務從最困難的 taskCount-1 開始（倒序）
+        for (int t = taskCount - 1; t >= 0; --t) {
+            int task = tasks[t];
+
+            if (!boosted.empty() && boosted.front() >= task) {
+                boosted.pop_front();  // 優先給已經補強好的工人
+            } else if (w >= 0 && workers[w] >= task) {
+                --w;  // 有免費工人可以直接完成
+            } else {
+                // 看剩下的工人中，有哪些能用藥丸補強完成任務
+                while (w >= 0 && workers[w] + strength >= task) {
+                    boosted.push_back(workers[w--]);
+                }
+                if (boosted.empty() || freePills == 0) {
+                    return false;  // 沒藥丸或沒人補得起來了
+                }
+                boosted.pop_back();  // 補最接近能補成的人
+                --freePills;
+            }
+        }
+
+        return true;
+    }
+};

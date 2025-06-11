@@ -1,30 +1,54 @@
+#include <vector> // Required for using std::vector
+#include <numeric> // Required for using std::accumulate (though a manual loop is used here for simplicity)
+
 class Solution {
 public:
     int canCompleteCircuit(std::vector<int>& gas, std::vector<int>& cost) {
+        // 初始化變數來追蹤總汽油量和總消耗量。
+        // 這些變數用於判斷是否有可能完成整個環路。
         int total_gas = 0;
         int total_cost = 0;
+
+        // 初始化 current_tank_gas，它代表如果從 'current_start_node' 開始，
+        // 油箱中累積的汽油量。
         int current_tank_gas = 0;
+
+        // 初始化 start_node，它將儲存潛在的起點索引。
+        // 我們假設索引 0 是起點。
         int start_node = 0;
 
+        // 步驟 1：計算所有加油站的總汽油量和總消耗量。
+        // 這個迴圈也隱含地計算了每個站點的「淨增」或「淨損」汽油量。
         for (int i = 0; i < gas.size(); ++i) {
             total_gas += gas[i];
             total_cost += cost[i];
 
+            // 計算當前路段的淨汽油量（獲得的汽油 - 消耗的汽油）。
             int net_gas_at_station = gas[i] - cost[i];
 
+            // 將這個淨汽油量加到我們當前的油箱中。
             current_tank_gas += net_gas_at_station;
 
+            // 步驟 2：如果 current_tank_gas 降到零以下，這表示
+            // 從 'start_node' 到目前站點 'i'，我們的汽油用完了。
+            // 因此，'start_node' 不能是答案。
+            // 我們需要嘗試從下一個站點 (i + 1) 開始。
             if (current_tank_gas < 0) {
+                // 將 current_tank_gas 重設為 0，有效地重新開始。
                 current_tank_gas = 0;
+                // 將潛在的 start_node 更新為下一個站點。
                 start_node = i + 1;
             }
         }
 
-
+        // 步驟 3：遍歷所有站點後，檢查總汽油量是否足以支付總消耗量。
+        // 如果 total_gas < total_cost，則無法完成環路。
+        // 如果 total_gas >= total_cost，則保證存在一個獨特的解決方案。
+        // 由貪婪演算法確定的 'start_node' 將是這個獨特的解決方案。
         if (total_gas < total_cost) {
-            return -1; 
+            return -1; // 無法完成環路
         } else {
-            return start_node; 
+            return start_node; // 這是獨特的起點站
         }
     }
 };

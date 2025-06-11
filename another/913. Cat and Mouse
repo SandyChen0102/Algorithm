@@ -1,0 +1,137 @@
+class Solution {
+public:
+    // 定義遊戲結果的常數
+    const int DRAW = 0;
+    const int MOUSE_WINS = 1;
+    const int CAT_WINS = 2;
+
+    int catMouseGame(std::vector<std::vector<int>>& graph) {
+        int N = graph.size(); // 圖的節點數量
+
+        // dp[老鼠位置][貓位置][回合] 儲存遊戲的結果
+        // 回合: 0 代表老鼠的回合，1 代表貓的回合
+        // 初始值設為 DRAW (0)
+        std::vector<std::vector<std::vector<int>>> dp(N, std::vector<std::vector<int>>(N, std::vector<int>(2, DRAW)));
+
+        // outdegree[老鼠位置][貓位置][回合] 儲存從該狀態出發，當前玩家
+        // 尚未確定贏/輸的路徑數量。這對於判斷平局至關重要。
+        std::vector<std::vector<std::vector<int>>> outdegree(N, std::vector<std::vector<int>>(N, std::vector<int>(2)));
+
+        // 優化：預先計算每個貓位置的有效移動次數，因為它不依賴於老鼠的位置 'm'。
+        std::vector<int> cat_valid_moves_per_node(N);
+        for (int c = 0; c < N; ++c) {
+            int count = 0;
+            for (int next_cat_pos : graph[c]) {
+                if (next_cat_pos != 0) { // 如果不是洞口，則是有效移動
+                    count++;
+                }
+            }
+            cat_valid_moves_per_node[c] = count;
+        }
+
+        // 初始化 outdegree 表格
+        for (int m = 0; m < N; ++m) { // 遍歷老鼠的所有可能位置
+            for (int c = 0; c < N; ++c) { // 遍歷貓的所有可能位置
+                // 老鼠的回合：outdegree 是老鼠當前位置的鄰居數量
+                outdegree[m][c][0] = graph[m].size(); 
+                
+                // 貓的回合：使用預先計算好的有效移動次數
+                outdegree[m][c][1] = cat_valid_moves_per_node[c];
+            }
+        }
+
+        // BFS 佇列。儲存 (老鼠位置, 貓位置, 回合, 當前狀態的勝者)
+        // 勝者: 1 代表老鼠贏，2 代表貓贏
+        std::queue<std::tuple<int, int, int, int>> q;
+
+        // 初始化佇列，加入所有立即確定結果的狀態 (基本情況)
+        for (int m = 0; m < N; ++m) {
+            for (int c = 0; c < N; ++c) {
+                // 情況 1: 老鼠到達洞口 (節點 0)。老鼠贏。
+                // 根據題目規則：「如果老鼠到達洞口，老鼠贏。」
+                // 這條規則優先於貓捉到老鼠。
+                if (m == 0) { 
+                    dp[m][c][0] = MOUSE_WINS; // 老鼠的回合，老鼠贏
+                    dp[m][c][1] = MOUSE_WINS; // 貓的回合，老鼠贏 (貓無法阻止老鼠在洞口)
+                    q.push({m, c, 0, MOUSE_WINS});
+                    q.push({m, c, 1, MOUSE_WINS});
+                }
+                // 情況 2: 貓捉到老鼠 (佔據與老鼠相同的節點)。貓贏。
+                // 只有當老鼠不在洞口時才考慮此情況 (因為前一個 if 已經處理了 m=0 的情況)
+                else if (m == c) { 
+                    dp[m][c][0] = CAT_WINS; // 老鼠的回合，貓贏 (老鼠被困)
+                    dp[m][c][1] = CAT_WINS; // 貓的回合，貓贏 (貓已經在那裡)
+                    q.push({m, c, 0, CAT_WINS});
+                    q.push({m, c, 1, CAT_WINS});
+                }
+            }
+        }
+
+        // BFS 遍歷
+        // 佇列中包含已確定結果的狀態。
+        // 當一個狀態 (m, c, turn, winner) 從佇列中取出時，我們考慮它的「父狀態」。
+        // 父狀態是指玩家可以移動到 (m, c) 的前一個狀態。
+        while (!q.empty()) {
+            auto [m, c, turn, winner] = q.front();
+            q.pop();
+
+            // 確定前一個回合的玩家 (即 'turn' 的對手)
+            int prev_player_turn = 1 - turn;
+
+            // 遍歷所有可能導致 (m, c, turn) 的前一個狀態
+            if (prev_player_turn == 0) { // 如果前一個回合是老鼠的回合
+                // 老鼠在 prev_m，貓在 c。老鼠從 prev_m 移動到 m。
+                // 所以，我們需要找到 graph[prev_m] 中包含 m 的 prev_m。
+                for (int prev_m : graph[m]) {
+                    // 檢查前一個狀態 (prev_m, c, prev_player_turn) 是否仍未確定 (DRAW)
+                    if (dp[prev_m][c][prev_player_turn] == DRAW) {
+                        // 如果當前狀態 (m, c, turn) 的勝者是 MOUSE_WINS，
+                        // 並且前一個回合是老鼠的回合，那麼老鼠可以強制獲勝。
+                        if (winner == MOUSE_WINS) {
+                            dp[prev_m][c][prev_player_turn] = MOUSE_WINS;
+                            q.push({prev_m, c, prev_player_turn, MOUSE_WINS});
+                        } else { // 當前勝者是 CAT_WINS。老鼠移動到了一個貓會贏的狀態。
+                            outdegree[prev_m][c][prev_player_turn]--; // 這個移動減少了老鼠獲勝的選項。
+                            if (outdegree[prev_m][c][prev_player_turn] == 0) {
+                                // 如果老鼠從 (prev_m, c, 0) 的所有移動都導致貓獲勝，
+                                // 那麼從 (prev_m, c, 0) 開始，貓會贏。
+                                dp[prev_m][c][prev_player_turn] = CAT_WINS;
+                                q.push({prev_m, c, prev_player_turn, CAT_WINS});
+                            }
+                        }
+                    }
+                }
+            } else { // 如果前一個回合是貓的回合 (prev_player_turn == 1)
+                // 老鼠在 m，貓在 prev_c。貓從 prev_c 移動到 c。
+                // 所以，我們需要找到 graph[prev_c] 中包含 c 的 prev_c。
+                for (int prev_c : graph[c]) {
+                    // 貓不能移動到洞口 (節點 0)。
+                    // 因此，如果 prev_c 是 0，這個移動是無效的，跳過。
+                    if (prev_c == 0) continue; 
+
+                    // 檢查前一個狀態 (m, prev_c, prev_player_turn) 是否仍未確定 (DRAW)
+                    if (dp[m][prev_c][prev_player_turn] == DRAW) {
+                        // 如果當前狀態 (m, c, turn) 的勝者是 CAT_WINS，
+                        // 並且前一個回合是貓的回合，那麼貓可以強制獲勝。
+                        if (winner == CAT_WINS) {
+                            dp[m][prev_c][prev_player_turn] = CAT_WINS;
+                            q.push({m, prev_c, prev_player_turn, CAT_WINS});
+                        } else { // 當前勝者是 MOUSE_WINS。貓移動到了一個老鼠會贏的狀態。
+                            outdegree[m][prev_c][prev_player_turn]--; // 這個移動減少了貓獲勝的選項。
+                            if (outdegree[m][prev_c][prev_player_turn] == 0) {
+                                // 如果貓從 (m, prev_c, 1) 的所有移動都導致老鼠獲勝，
+                                // 那麼從 (m, prev_c, 1) 開始，老鼠會贏。
+                                dp[m][prev_c][prev_player_turn] = MOUSE_WINS;
+                                q.push({m, prev_c, prev_player_turn, MOUSE_WINS});
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 最終結果是從初始狀態的結果:
+        // 老鼠在節點 1, 貓在節點 2, 輪到老鼠行動 (0)。
+        return dp[1][2][0];
+    }
+};

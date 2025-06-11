@@ -1,0 +1,68 @@
+
+class Solution {
+public:
+    int maxProfit(int k, std::vector<int>& prices) {
+        int n = prices.size();
+
+        // 處理特殊情況：如果天數為0或1，或者k為0，則無法進行交易，利潤為0。
+        if (n == 0 || n == 1 || k == 0) {
+            return 0;
+        }
+
+        // 如果 k 大於或等於 n/2，則表示可以進行無限次交易。
+        // 因為在 n 天內，最多可以完成 n/2 次買賣（買入->賣出算一次交易）。
+        // 在這種情況下，問題退化為「買賣股票的最佳時機 II」。
+        if (k >= n / 2) {
+            int max_profit = 0;
+            for (int i = 1; i < n; ++i) {
+                // 只要後一天的價格高於前一天，就進行交易並累加利潤。
+                if (prices[i] > prices[i-1]) {
+                    max_profit += prices[i] - prices[i-1];
+                }
+            }
+            return max_profit;
+        }
+
+        // 動態規劃表格
+        // dp[i][j] 表示使用最多 i 次交易，考慮到前 j 天 (prices[0]...prices[j-1]) 的最大利潤。
+        // 注意：這裡的 dp 陣列大小定義為 (k+1) x n，其中 i 表示完成的交易次數，j 表示考慮到的天數。
+        // prices 陣列的索引是 0 到 n-1。
+        // dp[i][j] 中的 j 對應 prices[j-1]
+        // 為了簡化索引，我們可以讓 j 表示 `prices` 陣列的索引，即 `dp[i][j]` 是考慮到 `prices[j]` 的最大利潤。
+        // 這樣 dp 表格的大小就是 (k+1) x n。
+        std::vector<std::vector<int>> dp(k + 1, std::vector<int>(n, 0));
+
+        // 遍歷交易次數從 1 到 k
+        for (int i = 1; i <= k; ++i) {
+            // max_diff 儲存 dp[i-1][x] - prices[x] 的最大值。
+            // 它的初始值為 -prices[0]，表示在第0天買入（第0天之前0次交易，利潤為0）。
+            // 我們用最小值初始化，以確保任何有效價格都能更新它。
+            int max_diff = std::numeric_limits<int>::min();
+            // 在計算 dp[i][j] 之前，max_diff 必須先考慮到 `prices[0]`
+            // 即 dp[i-1][0] - prices[0]
+            if (0 < n) { // 確保 prices 數組非空
+                max_diff = -prices[0];
+            }
+
+
+            // 遍歷天數從 1 到 n-1 (即 prices[1] 到 prices[n-1])
+            for (int j = 1; j < n; ++j) {
+                // 情况1: 第 j 天不進行交易
+                dp[i][j] = dp[i][j-1];
+
+                // 情况2: 第 j 天賣出股票
+                // 這是 prices[j] + (dp[i-1][x] - prices[x])
+                // 其中 (dp[i-1][x] - prices[x]) 的最大值由 max_diff 追蹤。
+                dp[i][j] = std::max(dp[i][j], prices[j] + max_diff);
+
+                // 更新 max_diff 以供計算 dp[i][j+1] 時使用
+                // 這裡的 dp[i-1][j] 是指考慮到第 j 天（prices[j]）的 i-1 次交易的最大利潤。
+                // 我們嘗試在第 j 天買入，所以是 dp[i-1][j] - prices[j]。
+                max_diff = std::max(max_diff, dp[i-1][j] - prices[j]);
+            }
+        }
+
+        // 最終結果為 dp[k][n-1]，即在所有天數中，最多 k 次交易的最大利潤。
+        return dp[k][n-1];
+    }
+};

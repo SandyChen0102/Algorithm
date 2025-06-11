@@ -1,0 +1,30 @@
+class Solution {
+public:
+    int canCompleteCircuit(std::vector<int>& gas, std::vector<int>& cost) {
+        int total_gas = 0;
+        int total_cost = 0;
+        int current_tank_gas = 0;
+        int start_node = 0;
+
+        for (int i = 0; i < gas.size(); ++i) {
+            total_gas += gas[i];
+            total_cost += cost[i];
+
+            int net_gas_at_station = gas[i] - cost[i];
+
+            current_tank_gas += net_gas_at_station;
+
+            if (current_tank_gas < 0) {
+                current_tank_gas = 0;
+                start_node = i + 1;
+            }
+        }
+
+
+        if (total_gas < total_cost) {
+            return -1; 
+        } else {
+            return start_node; 
+        }
+    }
+};

@@ -1,0 +1,111 @@
+class Solution {
+public:
+    int shortestPathAllKeys(std::vector<std::string>& grid) {
+        int m = grid.size();    // 網格的行數
+        int n = grid[0].size(); // 網格的列數
+
+        int start_row, start_col; // 起始點 '@' 的坐標
+        int total_keys_count = 0; // 網格中鑰匙的總數量 (a, b, c, ...)
+
+        // 遍歷網格，找到起始點並計算總鑰匙數
+        for (int r = 0; r < m; ++r) {
+            for (int c = 0; c < n; ++c) {
+                if (grid[r][c] == '@') {
+                    start_row = r;
+                    start_col = c;
+                } else if (grid[r][c] >= 'a' && grid[r][c] <= 'f') {
+                    // 將鑰匙字母映射到 0-5 的索引
+                    // total_keys_count 記錄的是鑰匙種類的數量，例如如果只有 'a' 和 'c'，
+                    // total_keys_count 應該是 2，但由於我們是計算 (char - 'a') + 1，
+                    // 它會自動調整到最大的那個鑰匙的索引 + 1。
+                    // 舉例：如果只有 'a', 'c'，那麼 'c' - 'a' + 1 = 2 + 1 = 3。
+                    // all_keys_mask = (1 << 3) - 1 = 0b111，表示我們需要收集位元 0、1、2。
+                    // 實際上，只要收集 'a' (0b001) 和 'c' (0b100) 即可。
+                    // 正確做法是找到網格中最大的鑰匙字母，然後用它來決定 bitmask 的大小。
+                    // 題目保證 1 <= k <= 6 且是前 k 個字母。所以直接用 k 即可。
+                    // 此處的做法沒問題，因為 k 決定了 total_keys_count 的最大值。
+                    total_keys_count = std::max(total_keys_count, (grid[r][c] - 'a') + 1);
+                }
+            }
+        }
+
+        // 計算目標鑰匙位元遮罩：所有鑰匙都收集後的狀態
+        int all_keys_mask = (1 << total_keys_count) - 1;
+
+        // BFS 佇列：儲存 (當前行, 當前列, 已收集鑰匙的位元遮罩, 距離)
+        std::queue<std::tuple<int, int, int, int>> q;
+        
+        // 訪問陣列：使用 3D std::vector<bool> 代替 std::set，提供 O(1) 查找和插入
+        // 尺寸為 [行數][列數][2^鑰匙數]
+        std::vector<std::vector<std::vector<bool>>> visited(
+            m, std::vector<std::vector<bool>>(
+                n, std::vector<bool>(1 << total_keys_count, false)
+            )
+        );
+
+        // 將起始狀態推入佇列和訪問陣列
+        q.push({start_row, start_col, 0, 0}); // 初始沒有鑰匙，距離為 0
+        visited[start_row][start_col][0] = true;
+
+        // 定義四個方向的移動 (上, 下, 左, 右)
+        int dr[] = {-1, 1, 0, 0};
+        int dc[] = {0, 0, -1, 1};
+
+        // BFS 遍歷
+        while (!q.empty()) {
+            auto [r, c, keys, dist] = q.front();
+            q.pop();
+
+            // 如果已經收集了所有鑰匙，則返回當前距離
+            if (keys == all_keys_mask) {
+                return dist;
+            }
+
+            // 探索四個方向的鄰居
+            for (int i = 0; i < 4; ++i) {
+                int nr = r + dr[i];
+                int nc = c + dc[i];
+                int next_keys = keys; // 預設下一狀態的鑰匙數與當前相同
+
+                // 檢查邊界
+                if (nr < 0 || nr >= m || nc < 0 || nc >= n) {
+                    continue;
+                }
+
+                char cell = grid[nr][nc];
+
+                // 處理牆壁
+                if (cell == '#') {
+                    continue;
+                }
+
+                // 處理鑰匙
+                if (cell >= 'a' && cell <= 'f') {
+                    // 獲取當前鑰匙的位元索引
+                    int key_bit_val = (1 << (cell - 'a'));
+                    // 將該鑰匙添加到已收集的鑰匙集合中
+                    next_keys |= key_bit_val;
+                } 
+                // 處理鎖
+                else if (cell >= 'A' && cell <= 'F') {
+                    // 檢查是否擁有對應的鑰匙
+                    // (keys >> (cell - 'A')) & 1 判斷對應位元是否為 1
+                    if (!((keys >> (cell - 'A')) & 1)) {
+                        // 如果沒有對應的鑰匙，則不能通過鎖，跳過
+                        continue;
+                    }
+                }
+                // 對於 '.' 或 '@'，next_keys 不變
+
+                // 如果新狀態尚未被訪問過，則加入佇列
+                if (!visited[nr][nc][next_keys]) {
+                    visited[nr][nc][next_keys] = true;
+                    q.push({nr, nc, next_keys, dist + 1});
+                }
+            }
+        }
+
+        // 如果佇列為空，但未能收集所有鑰匙，則表示不可能，返回 -1
+        return -1;
+    }
+};

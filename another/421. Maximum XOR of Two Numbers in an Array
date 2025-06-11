@@ -1,0 +1,72 @@
+// Trie節點結構
+struct TrieNode {
+    TrieNode* children[2]; // 0 或 1
+    TrieNode() {
+        children[0] = nullptr;
+        children[1] = nullptr;
+    }
+};
+
+class Solution {
+private:
+    TrieNode* root; // 字典樹的根節點
+    const int BITS = 30; // 通常處理到第 30 位，因為數字可以是 0 到 2^31 - 1
+public:
+    Solution() {
+        root = new TrieNode(); // 初始化字典樹
+    }
+    // 將一個數字插入字典樹
+    void insert(int num) {
+        TrieNode* node = root;
+        // 從最高位開始遍歷，直到最低位
+        for (int i = BITS; i >= 0; --i) {
+            // 獲取當前位的二進位值
+            // (num >> i) & 1 會得到 num 在第 i 位的 0 或 1
+            int bit = (num >> i) & 1;
+            // 如果子節點不存在，則創建它
+            if (node->children[bit] == nullptr) {
+                node->children[bit] = new TrieNode();
+            }
+            // 移動到下一個節點
+            node = node->children[bit];
+        }
+    }
+    // 尋找與給定數字進行異或操作後能得到最大值的數字
+    int findMaxXOR(int num) {
+        TrieNode* node = root;
+        int maxXOR = 0; // 儲存當前數字的最大異或結果
+
+        // 從最高位開始遍歷
+        for (int i = BITS; i >= 0; --i) {
+            // 獲取當前數字的當前位
+            int bit = (num >> i) & 1;
+            // 我們希望找到與當前位不同的位 (1 - bit)
+            int desired_bit = 1 - bit;
+            // 如果存在與當前位不同的子節點
+            if (node->children[desired_bit] != nullptr) {
+                // 走這條路徑，因為它會使異或結果的當前位為 1
+                maxXOR |= (1 << i); // 將第 i 位設定為 1
+                node = node->children[desired_bit]; // 移動到不同位的子節點
+            } else {
+                // 如果不存在不同的子節點，只能走相同的子節點
+                // 這意味著異或結果的當前位為 0
+                node = node->children[bit]; // 移動到相同位的子節點
+            }
+        }
+        return maxXOR;
+    }
+    // 主函數，用於找到陣列中任意兩個數字的最大異或值
+    int findMaximumXOR(std::vector<int>& nums) {
+        // 首先將所有數字插入字典樹
+        for (int num : nums) {
+            insert(num);
+        }
+        int max_overall_xor = 0; // 儲存最終的最大異或值
+        // 對於陣列中的每個數字，在字典樹中尋找與它異或後能得到最大值的數字
+        for (int num : nums) {
+            max_overall_xor = std::max(max_overall_xor, findMaxXOR(num));
+        }
+        return max_overall_xor;
+    }
+};
+
